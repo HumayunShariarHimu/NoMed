@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoMed AI Life Guide</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-dark-5@1.1.3/dist/css/bootstrap-night.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<style>
+body { font-family: 'Segoe UI', sans-serif; background-color:#121212; color:#eee; }
+.navbar { margin-bottom:30px; box-shadow:0 4px 8px rgba(0,0,0,0.5);}
+.card { border-radius:15px; box-shadow:0 8px 20px rgba(0,0,0,0.7); margin-bottom:25px; background-color:#1e1e1e; color:#eee; }
+.card input, .card select, .card textarea { background-color:#2b2b2b; color:#eee; border:1px solid #444; }
+.card button { font-weight:bold; }
+h1,h5 { font-weight:bold; color:#f0f0f0; }
+#motivation-text { min-height:40px; font-size:1.1rem; color:#fff; }
+footer { text-align:center; margin:40px 0; color:#888; }
+a { color:#00bfff; text-decoration:none; }
+a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#">NoMed AI</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- Mindset Test -->
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Mindset Test</h5>
+    <div id="mindset-questions"></div>
+    <button id="mindset-submit" class="btn btn-primary mt-2">Evaluate Mindset</button>
+  </div>
+</div>
+
+<!-- Daily Routine -->
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Daily Routine Planner</h5>
+    <input type="text" id="exercise" class="form-control mb-2" placeholder="Today's Exercise">
+    <input type="text" id="meditation" class="form-control mb-2" placeholder="Meditation / Mindfulness">
+    <input type="text" id="habit" class="form-control mb-2" placeholder="New Habit">
+    <button id="save-routine" class="btn btn-success">Save Routine</button>
+  </div>
+</div>
+
+<!-- Stress Tracker -->
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Stress Tracker</h5>
+    <input type="range" id="stress-level" min="0" max="10" class="form-range">
+    <p>Stress Level: <span id="stress-value">5</span></p>
+    <canvas id="stressChart" height="80"></canvas>
+  </div>
+</div>
+
+<!-- Health Guidance -->
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Health Guidance (Non-medication)</h5>
+    <input type="text" id="disease-search" class="form-control mb-2" placeholder="Enter symptom or disease">
+    <button id="search-health" class="btn btn-info mb-2">Search Guidance</button>
+    <ul id="health-results"></ul>
+  </div>
+</div>
+
+<!-- Motivation AI -->
+<div class="card">
+  <div class="card-body text-center">
+    <h5 class="card-title">Motivation Boost</h5>
+    <button id="motivation-btn" class="btn btn-warning">Get Motivation</button>
+    <p id="motivation-text" class="mt-2"></p>
+  </div>
+</div>
+
+<footer>
+   NoMed - All Rights Reserved | Humayun Shariar Himu
+</footer>
+
+<!-- JS Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+<script>
+// --- Mindset Test ---
+const questions = [
+  "আজ আপনার মানসিক অবস্থা কেমন?",
+  "আপনার শক্তি ও উদ্দীপনার লেভেল কেমন?",
+  "আপনি কতটা চাপ অনুভব করছেন?"
+];
+const qDiv = document.getElementById('mindset-questions');
+questions.forEach((q,i)=>{
+  qDiv.innerHTML += `<label>${q}</label>
+  <input type="range" id="q${i}" min="0" max="10" class="form-range mb-2">`;
+});
+document.getElementById('mindset-submit').addEventListener('click',()=>{
+  let score=0;
+  questions.forEach((_,i)=>score+=parseInt(document.getElementById(`q${i}`).value));
+  Swal.fire('Mindset Score',`আপনার মানসিক স্কোর হলো: ${score}/${questions.length*10}`,'info');
+});
+
+// --- Daily Routine ---
+document.getElementById('save-routine').addEventListener('click',()=>{
+  const routine={
+    exercise:document.getElementById('exercise').value,
+    meditation:document.getElementById('meditation').value,
+    habit:document.getElementById('habit').value
+  };
+  localStorage.setItem('routine',JSON.stringify(routine));
+  Swal.fire('Saved!','আপনার দৈনিক রুটিন সংরক্ষিত হয়েছে।','success');
+});
+
+// --- Stress Tracker & Chart ---
+const stressSlider = document.getElementById('stress-level');
+const stressValue = document.getElementById('stress-value');
+const ctx = document.getElementById('stressChart').getContext('2d');
+const stressChart = new Chart(ctx,{
+  type:'line',
+  data:{
+    labels:['Morning','Noon','Evening','Night'],
+    datasets:[{label:'Stress Level',data:[5,5,5,5],borderColor:'#00bfff',fill:false}]
+  },
+  options:{responsive:true, plugins:{legend:{labels:{color:'#eee'}}}, scales:{x:{ticks:{color:'#eee'}},y:{ticks:{color:'#eee'}}}}
+});
+stressSlider.addEventListener('input',()=>{
+  stressValue.textContent = stressSlider.value;
+  stressChart.data.datasets[0].data = [stressSlider.value,stressSlider.value-1,stressSlider.value-2,stressSlider.value-1];
+  stressChart.update();
+});
+
+// --- Health Guidance (Inline JSON Database) ---
+const healthDB = [
+  {disease:'stress', symptoms:['stress','mental'], guidance:'Meditation, light exercise, deep breathing, nature walk'},
+  {disease:'insomnia', symptoms:['insomnia','sleep'], guidance:'Sleep hygiene, warm bath, avoid screen, meditation'},
+  {disease:'anxiety', symptoms:['anxiety','nervous'], guidance:'Breathing exercises, journaling, cognitive exercises'},
+  {disease:'fatigue', symptoms:['fatigue','tired'], guidance:'Balanced diet, hydration, light exercise, mindfulness'},
+  {disease:'headache', symptoms:['headache','migraine'], guidance:'Hydration, rest, meditation, reduce screen time'}
+];
+
+document.getElementById('search-health').addEventListener('click',()=>{
+  const keyword = document.getElementById('disease-search').value.toLowerCase().trim();
+  const ul = document.getElementById('health-results');
+  if(keyword===''){ul.innerHTML='<li>Please enter a symptom or disease.</li>'; return;}
+  const results = healthDB.filter(d=>d.disease.toLowerCase().includes(keyword) || d.symptoms.some(s=>s.includes(keyword)));
+  ul.innerHTML = '';
+  if(results.length===0){
+    ul.innerHTML = `<li>No guidance found. 
+    <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(keyword)}" target="_blank">YouTube</a> or 
+    <a href="https://www.google.com/search?q=${encodeURIComponent(keyword)}" target="_blank">Google</a>
+    </li>`;
+  } else {
+    results.forEach(r=>{
+      ul.innerHTML += `<li><b>${r.disease}</b>: ${r.guidance}</li>`;
+    });
+  }
+});
+
+// --- Motivation AI ---
+const motivations=["আপনি শক্তিশালী, বিশ্বাস রাখুন!","প্রতিটি ছোট পদক্ষেপ গুরুত্বপূর্ণ।","আজকের চেষ্টা আগামীকালের জয়।","নিজেকে ভালোবাসুন, মানসিক শান্তি প্রথমে।"];
+document.getElementById('motivation-btn').addEventListener('click',()=>{
+  const random = motivations[Math.floor(Math.random()*motivations.length)];
+  new Typed('#motivation-text',{strings:[random],typeSpeed:50,showCursor:false});
+});
+</script>
+
+</body>
+</html>
